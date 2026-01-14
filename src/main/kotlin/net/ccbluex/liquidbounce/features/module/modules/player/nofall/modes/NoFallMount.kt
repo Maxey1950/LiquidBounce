@@ -23,14 +23,13 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.once
 import net.ccbluex.liquidbounce.event.tickHandler
 import net.ccbluex.liquidbounce.event.waitTicks
-import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
+import net.ccbluex.liquidbounce.utils.client.interact
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.PlayerRideable
 import net.minecraft.world.entity.animal.happyghast.HappyGhast
 import net.minecraft.world.entity.vehicle.VehicleEntity
-import net.minecraft.world.phys.EntityHitResult
 import kotlin.math.min
 
 /**
@@ -88,9 +87,6 @@ internal object NoFallMount : NoFallMode("Mount") {
                 return@tickHandler
             }
 
-        if (!isOlderThanOrEquals1_7_10) {
-            interaction.interactAt(player, target, EntityHitResult(target), InteractionHand.MAIN_HAND)
-        }
         interaction.interact(player, target, InteractionHand.MAIN_HAND)
         player.swing(InteractionHand.MAIN_HAND)
         lastTargetId = target.id
