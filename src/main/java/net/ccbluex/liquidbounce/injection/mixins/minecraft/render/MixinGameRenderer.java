@@ -49,7 +49,7 @@ import net.minecraft.client.renderer.Lightmap;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
-import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
@@ -96,7 +96,7 @@ public abstract class MixinGameRenderer {
     /**
      * Hook world render event
      */
-    @Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/CameraEntityRenderState;isSleeping:Z", opcode = Opcodes.GETFIELD))
+    @Inject(method = "renderLevel", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/state/level/CameraEntityRenderState;isSleeping:Z", opcode = Opcodes.GETFIELD))
     public void hookWorldRender(
         DeltaTracker deltaTracker,
         CallbackInfo ci,
@@ -142,11 +142,12 @@ public abstract class MixinGameRenderer {
     /**
      * Hook screen render event
      */
-    @Inject(method = "render", at = @At(value = "INVOKE",
+    @Inject(method = "extractGui", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V",
             shift = At.Shift.AFTER))
-    public void hookScreenRender(DeltaTracker tickCounter, boolean tick, CallbackInfo ci, @Local(name = "graphics") GuiGraphics graphics) {
-        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, tickCounter.getGameTimeDeltaPartialTick(false)));
+    public void hookScreenRender(DeltaTracker deltaTracker, boolean shouldRenderLevel, boolean resourcesLoaded,
+        CallbackInfo ci, @Local(name = "graphics") GuiGraphics graphics) {
+        EventManager.INSTANCE.callEvent(new ScreenRenderEvent(graphics, deltaTracker.getGameTimeDeltaPartialTick(false)));
     }
 
     @Inject(method = "bobHurt", at = @At("HEAD"), cancellable = true)
@@ -208,23 +209,13 @@ public abstract class MixinGameRenderer {
         return original;
     }
 
-    @ModifyExpressionValue(method = "renderLevel",
+    @ModifyExpressionValue(method = "extractOptions",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
             )
     )
     private CameraType hookPerspectiveEventOnCamera(CameraType original) {
-        return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
-    }
-
-    @ModifyExpressionValue(method = "renderItemInHand",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/Options;getCameraType()Lnet/minecraft/client/CameraType;"
-            )
-    )
-    private CameraType hookPerspectiveEventOnHand(CameraType original) {
         return EventManager.INSTANCE.callEvent(new PerspectiveEvent(original)).getPerspective();
     }
 
